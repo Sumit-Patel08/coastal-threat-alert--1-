@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, TreePine, TrendingUp, TrendingDown, MapPin, Calendar, BarChart3, Leaf } from "lucide-react"
+import { ArrowLeft, TreePine, TrendingUp, TrendingDown, MapPin, Calendar, BarChart3, Leaf, ExternalLink } from "lucide-react"
 import { getBlueCarbonDetails, getHistoricalCarbonData, getEcosystemMapUrl, calculateCarbonTrends } from "@/lib/blue-carbon-api"
 
 interface BlueCarbonDetailsProps {
@@ -83,6 +83,14 @@ export function BlueCarbonDetails({ ecosystem, onBack }: BlueCarbonDetailsProps)
       case "poor": return "bg-red-500"
       default: return "bg-gray-500"
     }
+  }
+
+  const getSatelliteImageUrl = (coordinates: { lat: number; lng: number }) => {
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${coordinates.lat},${coordinates.lng}&zoom=15&size=400x300&scale=2&maptype=satellite&key=YOUR_API_KEY`
+  }
+
+  const getGoogleMapsUrl = (coordinates: { lat: number; lng: number }, name: string) => {
+    return `https://www.google.com/maps/search/${encodeURIComponent(name)}/@${coordinates.lat},${coordinates.lng},15z`
   }
 
   return (
@@ -325,7 +333,7 @@ export function BlueCarbonDetails({ ecosystem, onBack }: BlueCarbonDetailsProps)
                 </CardHeader>
                 <CardContent>
                   <img
-                    src={getEcosystemMapUrl(location.coordinates)}
+                    src={`https://maps.googleapis.com/maps/api/staticmap?center=${location.coordinates.lat},${location.coordinates.lng}&zoom=15&size=400x300&scale=2&maptype=satellite`}
                     alt={`${location.name} satellite view`}
                     className="w-full h-32 object-cover rounded mb-3"
                     onError={(e) => {
@@ -353,6 +361,18 @@ export function BlueCarbonDetails({ ecosystem, onBack }: BlueCarbonDetailsProps)
                       >
                         {location.health}
                       </Badge>
+                    </div>
+                    <div className="mt-3">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => window.open(getGoogleMapsUrl(location.coordinates, location.name), '_blank')}
+                      >
+                        <MapPin className="h-3 w-3 mr-2" />
+                        View on Google Maps
+                        <ExternalLink className="h-3 w-3 ml-2" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

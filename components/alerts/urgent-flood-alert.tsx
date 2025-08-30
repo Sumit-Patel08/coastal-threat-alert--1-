@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Waves, Phone, MapPin, Clock, Users } from "lucide-react"
+import { AlertTriangle, Waves, Phone, MapPin, Clock, Users, ExternalLink } from "lucide-react"
 
 interface FloodAlert {
   id: string
@@ -118,6 +118,23 @@ export function UrgentFloodAlert() {
     return diffInDays === 1 ? "1 day ago" : `${diffInDays} days ago`
   }
 
+  const getSatelliteImage = (location: string, coordinates: { lat: number; lng: number }) => {
+    switch (location) {
+      case "Mumbai Coastal Area":
+        return "/mumbai-coastal-satellite.png"
+      case "Chennai Marina Beach":
+        return "/chennai-marina-beach-satellite.png"
+      case "Kochi Backwaters":
+        return "/kochi-backwaters-satellite.png"
+      default:
+        return `https://maps.googleapis.com/maps/api/staticmap?center=${coordinates.lat},${coordinates.lng}&zoom=14&size=600x300&scale=2&maptype=satellite&format=jpg`
+    }
+  }
+
+  const getGoogleMapsUrl = (coordinates: { lat: number; lng: number }, location: string) => {
+    return `https://www.google.com/maps/search/${encodeURIComponent(location)}/@${coordinates.lat},${coordinates.lng},15z`
+  }
+
   if (loading) {
     return (
       <Card>
@@ -178,6 +195,24 @@ export function UrgentFloodAlert() {
                   {alert.severity}
                 </Badge>
               </div>
+
+              <div className="mb-3">
+                <img
+                  src={getSatelliteImage(alert.location, alert.coordinates)}
+                  alt={`${alert.location} satellite view`}
+                  className="w-full h-32 object-cover rounded border"
+                  onError={(e) => {
+                    e.currentTarget.src = `data:image/svg+xml;base64,${btoa(`
+                      <svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100%" height="100%" fill="#e5e7eb"/>
+                        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="Arial" font-size="14" fill="#6b7280">
+                          ${alert.location} Satellite View
+                        </text>
+                      </svg>
+                    `)}`
+                  }}
+                />
+              </div>
               
               <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                 <div>
@@ -200,9 +235,15 @@ export function UrgentFloodAlert() {
                   {formatTimeAgo(alert.timestamp)}
                 </span>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="text-xs">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs"
+                    onClick={() => window.open(getGoogleMapsUrl(alert.coordinates, alert.location), '_blank')}
+                  >
                     <MapPin className="h-3 w-3 mr-1" />
-                    View Map
+                    View Location
+                    <ExternalLink className="h-3 w-3 ml-1" />
                   </Button>
                   <Button size="sm" className="text-xs bg-red-600 hover:bg-red-700">
                     <Phone className="h-3 w-3 mr-1" />
