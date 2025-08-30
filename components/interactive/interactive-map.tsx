@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { MapPin, Layers, ZoomIn, ZoomOut, RotateCcw, AlertTriangle, Waves, Wind } from "lucide-react"
 
 interface RiskZone {
@@ -166,36 +165,30 @@ export function InteractiveMap() {
           {riskZones.map((zone) => {
             const IconComponent = getIconForType(zone.type)
             return (
-              <motion.div
+              <div
                 key={zone.id}
-                className="absolute cursor-pointer"
+                className="absolute cursor-pointer hover:scale-110 active:scale-95 transition-transform duration-200"
                 style={{
                   left: `${zone.coordinates.x}%`,
                   top: `${zone.coordinates.y}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
                 onClick={() => setSelectedZone(zone)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
               >
                 {/* Risk Zone Circle */}
-                <motion.div
+                <div
                   className={`absolute inset-0 rounded-full border-2 ${
                     zone.severity === 'severe' ? 'border-red-500' :
                     zone.severity === 'high' ? 'border-orange-500' :
                     zone.severity === 'moderate' ? 'border-yellow-500' : 'border-blue-500'
-                  }`}
+                  } ${isAnimating ? 'animate-pulse' : ''}`}
                   style={{
                     width: `${zone.radius * 2}px`,
                     height: `${zone.radius * 2}px`,
                     marginLeft: `-${zone.radius}px`,
-                    marginTop: `-${zone.radius}px`
+                    marginTop: `-${zone.radius}px`,
+                    opacity: isAnimating ? '0.5' : '0.3'
                   }}
-                  animate={isAnimating ? {
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.6, 0.3]
-                  } : {}}
-                  transition={{ duration: 2, repeat: Infinity }}
                 />
                 
                 {/* Zone Icon */}
@@ -206,27 +199,23 @@ export function InteractiveMap() {
                 }`}>
                   <IconComponent className="w-4 h-4 text-white" />
                 </div>
-              </motion.div>
+              </div>
             )
           })}
 
           {/* Live Data Points */}
-          <motion.div
-            className="absolute"
+          <div
+            className="absolute animate-pulse"
             style={{ left: '60%', top: '40%' }}
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
           >
             <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg"></div>
-          </motion.div>
-          <motion.div
-            className="absolute"
-            style={{ left: '35%', top: '55%' }}
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+          </div>
+          <div
+            className="absolute animate-pulse"
+            style={{ left: '35%', top: '55%', animationDelay: '0.5s' }}
           >
             <div className="w-3 h-3 bg-blue-500 rounded-full shadow-lg"></div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Legend */}
@@ -249,10 +238,8 @@ export function InteractiveMap() {
 
         {/* Selected Zone Info */}
         {selectedZone && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700 max-w-xs"
+          <div
+            className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-lg border border-gray-200 dark:border-gray-700 max-w-xs animate-in slide-in-from-top-2 fade-in duration-300"
           >
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900 dark:text-white">{selectedZone.name}</h4>
@@ -278,7 +265,7 @@ export function InteractiveMap() {
                 {selectedZone.type} risk
               </span>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
