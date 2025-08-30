@@ -14,15 +14,7 @@ export default function DashboardLayout({
             Coastal Threat Alert
           </Link>
           <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-            <Link href="/#map" className="hover:text-foreground">
-              Map
-            </Link>
-            <Link href="/#insights" className="hover:text-foreground">
-              Insights
-            </Link>
-            <Link href="/#learn" className="hover:text-foreground">
-              Learn
-            </Link>
+            {/* Navigation links removed for dashboard pages */}
           </nav>
         </div>
       </header>
