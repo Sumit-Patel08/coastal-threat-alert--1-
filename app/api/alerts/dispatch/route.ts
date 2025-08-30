@@ -35,8 +35,7 @@ export async function POST(req: NextRequest) {
     .eq("id", alertId)
     .single()
 
-if ((alertErr as { code?: string })?.code === "42P01") {
- 
+  if ((alertErr as { code?: string })?.code === "42P01") {
     return NextResponse.json({ error: "Database not initialized. Run SQL scripts." }, { status: 503 })
   }
   if (alertErr || !alert) {
