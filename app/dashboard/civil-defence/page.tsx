@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,26 +10,103 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Shield, Users, MapPin, Phone, AlertTriangle, ClipboardList, Radio, Truck, Send, History, Activity, Settings, Bell, Zap, CheckCircle2, Clock, Target, Waves } from "lucide-react"
 import { CivilDefenceAlertComposer } from "@/components/alerts/civil-defence-alert-composer"
 import { AlertHistory } from "@/components/alerts/alert-history"
+import { useState, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
-export default async function CivilDefenceDashboard() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function CivilDefenceDashboard() {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [deployingAlert, setDeployingAlert] = useState<number | null>(null)
+  const [selectedAlert, setSelectedAlert] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
 
-  if (!user) {
-    redirect("/auth/login")
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push("/auth/login")
+        return
+      }
+
+      // Check if user has the correct role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+
+      if (profile?.role !== "civil_defence") {
+        router.push("/dashboard")
+        return
+      }
+
+      setUser(user)
+      setIsLoading(false)
+    }
+
+    checkAuth()
+  }, [])
+
+  // Handler functions for button functionality
+  const handleDeployResponse = async (alert: any) => {
+    setDeployingAlert(alert.id)
+    
+    if (alert.status === "Resolved") {
+      // Reactivate resolved alert
+      toast({
+        title: "Reactivating Emergency Response",
+        description: `Reactivating response protocols for ${alert.type} in ${alert.location}. Status changed to Active.`,
+      })
+      
+      setTimeout(() => {
+        setDeployingAlert(null)
+        toast({
+          title: "Alert Reactivated",
+          description: `${alert.type} in ${alert.location} has been reactivated. Response teams are being notified.`,
+          variant: "default",
+        })
+      }, 2000)
+    } else {
+      // Deploy response for active alerts
+      toast({
+        title: "Deploying Response Teams",
+        description: `Initiating ${alert.severity === "Critical" ? "full" : alert.severity === "High" ? "enhanced" : "standard"} response for ${alert.type} in ${alert.location}`,
+      })
+
+      setTimeout(() => {
+        setDeployingAlert(null)
+        toast({
+          title: "Response Teams Deployed",
+          description: `Emergency response teams have been successfully deployed to ${alert.location}. ETA: 15-30 minutes.`,
+          variant: "default",
+        })
+      }, 3000)
+    }
   }
 
-  // Check if user has the correct role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
+  const handleUpdateStatus = (alert: any) => {
+    toast({
+      title: "Status Update",
+      description: `Status update initiated for ${alert.type} in ${alert.location}. Field teams will provide updates every 30 minutes.`,
+    })
+  }
 
-  if (profile?.role !== "civil_defence") {
-    redirect("/dashboard")
+  const getResponseActions = (alert: any) => {
+    switch (alert.type) {
+      case "Cyclone Warning":
+        return "Immediate evacuation, shelter activation, emergency broadcasts"
+      case "Flood Alert":
+        return "Water rescue teams, sandbag deployment, traffic rerouting"
+      case "Sea Level Rise":
+        return "Coastal monitoring, barrier inspection, resident notifications"
+      default:
+        return "Standard emergency response protocols"
+    }
   }
 
   // Mock data for hackathon MVP
@@ -61,6 +138,21 @@ export default async function CivilDefenceDashboard() {
     { id: 3, from: "Kolkata Beach", to: "Howrah Station", capacity: "3,500 people", status: "Standby" },
   ]
 
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
+
   return (
     <div className="flex-1 space-y-6 p-6 animate-in fade-in-0 duration-500">
       <div className="flex items-center justify-between">
@@ -78,46 +170,6 @@ export default async function CivilDefenceDashboard() {
               </p>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>System Settings</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <p>Configuration options would be available here.</p>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="destructive" className="gap-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                <Zap className="h-4 w-4" />
-                Emergency Broadcast
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-red-600">Emergency Broadcast System</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-800 font-medium">⚠️ This will send an immediate alert to all registered devices</p>
-                </div>
-                <Button variant="destructive" className="w-full">
-                  <Radio className="mr-2 h-4 w-4" />
-                  Activate Emergency Broadcast
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
@@ -139,10 +191,6 @@ export default async function CivilDefenceDashboard() {
                 </p>
               </div>
             </div>
-            <Button variant="destructive" size="sm" className="gap-2">
-              <Bell className="h-4 w-4" />
-              View Details
-            </Button>
           </div>
         </div>
       )}
@@ -151,10 +199,7 @@ export default async function CivilDefenceDashboard() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="alerts">Alert Management</TabsTrigger>
-          <TabsTrigger value="history">Alert History</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="preparedness">Preparedness</TabsTrigger>
-          <TabsTrigger value="coordination">Coordination</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -221,7 +266,7 @@ export default async function CivilDefenceDashboard() {
             </Card>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6">
             <Card className="border-0 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg">
                 <CardTitle className="flex items-center gap-2">
@@ -263,115 +308,11 @@ export default async function CivilDefenceDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-orange-500" />
-                  Quick Actions
-                </CardTitle>
-                <CardDescription>Emergency response tools</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 p-6">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200">
-                      <Radio className="h-4 w-4" />
-                      Emergency Broadcast
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Emergency Broadcast</DialogTitle>
-                    </DialogHeader>
-                    <p>Emergency broadcast system activated.</p>
-                  </DialogContent>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200">
-                      <Users className="h-4 w-4" />
-                      Deploy Teams
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Team Deployment</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <p>Select teams to deploy:</p>
-                      {teamStatus.map((team, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                          <span>{team.team}</span>
-                          <Button size="sm" variant={team.status === "Ready" ? "default" : "secondary"}>
-                            {team.status === "Ready" ? "Deploy" : team.status}
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-200" variant="outline">
-                      <MapPin className="h-4 w-4" />
-                      View Routes
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>Evacuation Routes</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      {evacuationRoutes.map((route) => (
-                        <div key={route.id} className="p-4 border rounded-lg">
-                          <h4 className="font-medium">{route.from} → {route.to}</h4>
-                          <p className="text-sm text-muted-foreground">Capacity: {route.capacity}</p>
-                          <Badge variant={route.status === "Active" ? "default" : "secondary"}>
-                            {route.status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200" variant="outline">
-                      <Phone className="h-4 w-4" />
-                      Contact HQ
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Emergency Contacts</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                      <div className="p-3 border rounded-lg">
-                        <div className="font-medium">Coast Guard Emergency</div>
-                        <div className="text-lg font-mono">1554</div>
-                      </div>
-                      <div className="p-3 border rounded-lg">
-                        <div className="font-medium">Civil Defence HQ</div>
-                        <div className="text-lg font-mono">1800-425-1555</div>
-                      </div>
-                      <div className="p-3 border rounded-lg">
-                        <div className="font-medium">Emergency Services</div>
-                        <div className="text-lg font-mono">112</div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-4">
           <CivilDefenceAlertComposer />
-        </TabsContent>
-
-        <TabsContent value="history" className="space-y-4">
-          <AlertHistory />
         </TabsContent>
 
         <TabsContent value="operations" className="space-y-4">
@@ -419,8 +360,74 @@ export default async function CivilDefenceDashboard() {
                       </div>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <Button size="sm" variant="destructive">Deploy Response</Button>
-                      <Button size="sm" variant="outline">View Details</Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        disabled={deployingAlert === alert.id}
+                        onClick={() => handleDeployResponse(alert)}
+                      >
+                        {deployingAlert === alert.id ? "Processing..." : "Deploy Response"}
+                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline" onClick={() => setSelectedAlert(alert)}>
+                            View Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>{selectedAlert?.type} - Detailed Information</DialogTitle>
+                          </DialogHeader>
+                          {selectedAlert && (
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground">Location</h4>
+                                  <p className="text-lg">{selectedAlert.location}</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground">Affected Population</h4>
+                                  <p className="text-lg">{selectedAlert.affected}</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground">Severity Level</h4>
+                                  <Badge variant={selectedAlert.severity === "Critical" ? "destructive" : selectedAlert.severity === "High" ? "default" : "secondary"}>
+                                    {selectedAlert.severity}
+                                  </Badge>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground">Current Status</h4>
+                                  <Badge variant={selectedAlert.status === "Active" ? "destructive" : selectedAlert.status === "Monitoring" ? "default" : "secondary"}>
+                                    {selectedAlert.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground mb-2">Response Details</h4>
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                                  <p><strong>Response Level:</strong> {selectedAlert.severity === "Critical" ? "Full Response" : selectedAlert.severity === "High" ? "Enhanced Response" : "Standard Response"}</p>
+                                  <p><strong>Teams Required:</strong> {selectedAlert.severity === "Critical" ? "All Available Teams" : selectedAlert.severity === "High" ? "3 Specialized Teams" : "1 Response Team"}</p>
+                                  <p><strong>Estimated Duration:</strong> {selectedAlert.severity === "Critical" ? "24-48 hours" : selectedAlert.severity === "High" ? "12-24 hours" : "6-12 hours"}</p>
+                                  <p><strong>Priority Actions:</strong> {getResponseActions(selectedAlert)}</p>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 pt-4">
+                                <Button 
+                                  variant="destructive"
+                                  disabled={deployingAlert === selectedAlert?.id}
+                                  onClick={() => handleDeployResponse(selectedAlert)}
+                                  className="flex-1"
+                                >
+                                  {deployingAlert === selectedAlert?.id ? "Processing..." : "Deploy Emergency Response"}
+                                </Button>
+                                <Button variant="outline" onClick={() => handleUpdateStatus(selectedAlert)} className="flex-1">
+                                  Update Status
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                 ))}
@@ -429,109 +436,6 @@ export default async function CivilDefenceDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="preparedness" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Disaster Preparedness Checklist</CardTitle>
-              <CardDescription>Pre-emergency readiness verification</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {preparednessChecklist.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                    <Checkbox checked={item.completed} />
-                    <div className="flex-1">
-                      <div className="font-medium">{item.item}</div>
-                      <div className="text-sm text-muted-foreground">{item.category}</div>
-                    </div>
-                    <Badge variant={item.completed ? "default" : "secondary"}>
-                      {item.completed ? "Complete" : "Pending"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="text-sm text-blue-800">
-                  <strong>Preparedness Score:</strong> {preparednessChecklist.filter(item => item.completed).length}/{preparednessChecklist.length} items complete
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="coordination" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Evacuation Routes</CardTitle>
-                <CardDescription>Active evacuation pathways and capacity</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {evacuationRoutes.map((route) => (
-                    <div key={route.id} className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium">{route.from} → {route.to}</h3>
-                        <Badge variant={route.status === "Active" ? "default" : "secondary"}>
-                          {route.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground mb-2">
-                        Capacity: {route.capacity}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">View Route</Button>
-                        <Button size="sm" variant="outline">Update Status</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Communication Hub</CardTitle>
-                <CardDescription>Emergency communication channels</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full" variant="default">
-                  <Radio className="mr-2 h-4 w-4" />
-                  Emergency Radio
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Phone className="mr-2 h-4 w-4" />
-                  Team Communications
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Truck className="mr-2 h-4 w-4" />
-                  Vehicle Dispatch
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Users className="mr-2 h-4 w-4" />
-                  Personnel Status
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Map Preview */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Operational Map</CardTitle>
-              <CardDescription>Team deployments and evacuation routes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <MapPin className="h-8 w-8 mx-auto mb-2" />
-                  <p>Interactive operational map would be displayed here</p>
-                  <p className="text-sm">Showing team locations, evacuation routes, and emergency zones</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   )
