@@ -51,36 +51,70 @@ export function Hero() {
   }, [])
 
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-10 pb-12 md:pt-16 md:pb-20">
-      <div className="grid items-center gap-8 md:grid-cols-2">
-        <div>
-          <h1 className="text-pretty text-3xl font-semibold leading-tight md:text-5xl">Coastal Threat Alert System</h1>
-          <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-lg">
-            Monitor storm surge, flooding, and erosion risks. Share timely alerts with residents, planners, and
-            responders to protect coastal communities.
-          </p>
-          <div className="mt-6 flex items-center gap-3">
-            <Button asChild>
-              <Link href="/auth/login">Open dashboard</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="#map">View map</Link>
-            </Button>
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Demo mode: data is mocked for preview. Connect your data sources later.
-          </p>
+    <section 
+      ref={ref}
+      className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-emerald-500/10 transition-all duration-1000"
+      id="gradient-bg"
+    >
+      <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(to_bottom,transparent,white)]" />
+      
+      <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+        <div className="grid items-center gap-8 md:grid-cols-2">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+              Coastal Threat Alert System
+            </h1>
+            <p className="mt-4 text-lg leading-relaxed text-gray-600 dark:text-gray-300 md:text-xl">
+              Monitor storm surge, flooding, and erosion risks. Share timely alerts with residents, planners, and
+              responders to protect coastal communities.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Button asChild size="lg" className="text-base">
+                <Link href="/auth/login">Open Dashboard</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-base">
+                <Link href="#map">View Live Map</Link>
+              </Button>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, x: 20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative mt-12 sm:mt-0"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm p-1 shadow-2xl ring-1 ring-white/10">
+              <img
+                src="/coastal-map-preview-tile-ocean-shoreline.png"
+                alt="Coastal Map Preview"
+                className="h-auto w-full rounded-xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-4 left-4 text-white">
+                <span className="inline-flex items-center rounded-full bg-blue-500/80 px-3 py-1 text-sm font-medium text-white">
+                  Live View
+                </span>
+              </div>
+            </div>
+          </motion.div>
         </div>
-        <Card className="p-4">
-          <div className="aspect-[16/10] w-full overflow-hidden rounded-md border">
-            <img
-              src="/coastal-map-preview-tile-ocean-shoreline.png"
-              alt="Coastal risk map preview with shoreline and tiles"
-              className="h-full w-full object-cover"
-            />
-          </div>
-        </Card>
       </div>
+      
+      {/* Animated gradient blobs */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute -left-16 top-1/2 hidden h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/20 blur-3xl lg:block" />
+        <div className="absolute -right-16 bottom-1/4 hidden h-32 w-32 rounded-full bg-cyan-500/20 blur-3xl lg:block" />
+      </motion.div>
     </section>
   )
 }
