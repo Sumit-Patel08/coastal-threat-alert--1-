@@ -52,7 +52,7 @@ export function DashboardClient() {
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">AI Coastal Threat Alert System</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Disaster Management System</h1>
           <p className="text-muted-foreground">
             Fully automated threat detection and emergency response coordination
           </p>

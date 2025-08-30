@@ -6,20 +6,11 @@ export async function POST(request: NextRequest) {
     const { city } = await request.json()
     const supabase = await createClient()
 
-    // Fetch latest sensor data for the city
-    const { data: sensorData } = await supabase
-      .from('sensor_data')
-      .select('*')
-      .ilike('location', `%${city}%`)
-      .order('timestamp', { ascending: false })
-      .limit(10)
-
-    if (!sensorData || sensorData.length === 0) {
-      return NextResponse.json({ error: 'No sensor data available for this city' }, { status: 404 })
-    }
-
+    // Generate fake sensor data for demo
+    const fakeSensorData = generateFakeSensorData(city)
+    
     // AI Analysis Logic
-    const analysis = await performAIAnalysis(sensorData, city)
+    const analysis = await performAIAnalysis(fakeSensorData, city)
     
     // Auto-generate risk assessment
     const riskAssessment = await generateRiskAssessment(analysis, city, supabase)
@@ -32,6 +23,7 @@ export async function POST(request: NextRequest) {
       analysis,
       riskAssessment,
       alerts,
+      sensorData: fakeSensorData,
       timestamp: new Date().toISOString()
     })
 
@@ -39,6 +31,47 @@ export async function POST(request: NextRequest) {
     console.error('AI Analysis error:', error)
     return NextResponse.json({ error: 'AI analysis failed' }, { status: 500 })
   }
+}
+
+function generateFakeSensorData(city: string) {
+  const cityVariations = {
+    'Mumbai': { seaLevelBase: 2.1, windBase: 25, pollutionBase: 85 },
+    'Chennai': { seaLevelBase: 1.8, windBase: 30, pollutionBase: 75 },
+    'Kolkata': { seaLevelBase: 2.3, windBase: 20, pollutionBase: 95 },
+    'Kochi': { seaLevelBase: 1.5, windBase: 15, pollutionBase: 45 },
+    'Visakhapatnam': { seaLevelBase: 1.9, windBase: 35, pollutionBase: 65 },
+    'Goa': { seaLevelBase: 1.2, windBase: 18, pollutionBase: 35 },
+    'Mangalore': { seaLevelBase: 1.6, windBase: 22, pollutionBase: 55 }
+  }
+
+  const base = cityVariations[city as keyof typeof cityVariations] || cityVariations['Mumbai']
+  
+  return [
+    {
+      id: `sensor-${Date.now()}-1`,
+      sensor_type: 'tide_gauge',
+      location: `${city} Port`,
+      value: base.seaLevelBase + (Math.random() * 0.8 - 0.4),
+      unit: 'meters',
+      timestamp: new Date().toISOString()
+    },
+    {
+      id: `sensor-${Date.now()}-2`,
+      sensor_type: 'weather_station',
+      location: `${city} Coastal Station`,
+      value: base.windBase + (Math.random() * 20 - 10),
+      unit: 'km/h',
+      timestamp: new Date().toISOString()
+    },
+    {
+      id: `sensor-${Date.now()}-3`,
+      sensor_type: 'pollution_sensor',
+      location: `${city} Bay Area`,
+      value: base.pollutionBase + (Math.random() * 30 - 15),
+      unit: 'AQI',
+      timestamp: new Date().toISOString()
+    }
+  ]
 }
 
 async function performAIAnalysis(sensorData: any[], city: string) {
