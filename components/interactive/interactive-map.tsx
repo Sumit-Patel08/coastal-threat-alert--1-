@@ -45,7 +45,6 @@ const riskZones: RiskZone[] = [
 
 export function InteractiveMap() {
   const [selectedZone, setSelectedZone] = useState<RiskZone | null>(null)
-  const [mapLayer, setMapLayer] = useState<'satellite' | 'risk' | 'elevation'>('risk')
   const [zoom, setZoom] = useState(1)
   const [isAnimating, setIsAnimating] = useState(true)
 
@@ -84,34 +83,9 @@ export function InteractiveMap() {
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
               <button
-                onClick={() => setMapLayer('satellite')}
-                className={`px-3 py-1 text-xs rounded ${
-                  mapLayer === 'satellite' 
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow' 
-                    : 'text-gray-600 dark:text-gray-300'
-                }`}
+                className="px-3 py-1 text-xs rounded bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow"
               >
-                Satellite
-              </button>
-              <button
-                onClick={() => setMapLayer('risk')}
-                className={`px-3 py-1 text-xs rounded ${
-                  mapLayer === 'risk' 
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow' 
-                    : 'text-gray-600 dark:text-gray-300'
-                }`}
-              >
-                Risk
-              </button>
-              <button
-                onClick={() => setMapLayer('elevation')}
-                className={`px-3 py-1 text-xs rounded ${
-                  mapLayer === 'elevation' 
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow' 
-                    : 'text-gray-600 dark:text-gray-300'
-                }`}
-              >
-                Elevation
+                Risk Layer
               </button>
             </div>
             <div className="flex items-center space-x-1">
