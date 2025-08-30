@@ -1,31 +1,68 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Fish, AlertTriangle, MapPin, Phone, Shield, Waves, Sun, CloudRain } from "lucide-react"
+import { Fish, AlertTriangle, MapPin, Phone, Shield, Waves, Sun, CloudRain, Thermometer, Wind, Eye, Navigation, Zap } from "lucide-react"
+import { RealTimeAlerts } from "@/components/alerts/realtime-alerts"
+import { EnhancedSafetyTips } from "@/components/safety/enhanced-safety-tips"
+import { InteractiveMap } from "@/components/map/interactive-map"
+import { useGeolocation } from "@/lib/geolocation"
+import { useRealTimeData } from "@/lib/realtime-data"
+import { mockCoastalConditions, getFishingSafetyColor } from "@/lib/mock-data"
 
-export default async function FisherfolkDashboard() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function FisherfolkDashboard() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const { location: userLocation } = useGeolocation()
+  const { data: realTimeData, lastUpdate, isConnected } = useRealTimeData()
 
-  if (!user) {
-    redirect("/auth/login")
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push("/auth/login")
+        return
+      }
+
+      // Check if user has the correct role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+
+      if (profile?.role !== "fisherfolk") {
+        router.push("/dashboard")
+        return
+      }
+
+      setUser(user)
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="flex-1 space-y-4 p-4 md:p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
-  // Check if user has the correct role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "fisherfolk") {
-    redirect("/dashboard")
-  }
+  if (!user) return null
 
   // Mock data for hackathon MVP
   const liveAlerts = [
@@ -113,59 +150,11 @@ export default async function FisherfolkDashboard() {
             </Card>
           </div>
 
-          {/* Live Alerts Summary */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-orange-500" />
-                Live Alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {liveAlerts.slice(0, 2).map((alert) => (
-                  <div key={alert.id} className="flex items-center justify-between p-2 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{alert.type}</div>
-                      <div className="text-xs text-muted-foreground">{alert.location}</div>
-                    </div>
-                    <Badge variant={alert.severity === "Critical" ? "destructive" : alert.severity === "High" ? "default" : "secondary"} className="text-xs">
-                      {alert.severity}
-                    </Badge>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" className="w-full mt-2">
-                  View All Alerts
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Real-Time Live Alerts */}
+          <RealTimeAlerts maxItems={2} />
 
-          {/* Safety Tips */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-500" />
-                Safety Tips
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {safetyTips.slice(0, 3).map((tip) => (
-                  <div key={tip.id} className="flex items-start gap-2 p-2 border rounded-lg">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <div className="text-sm">{tip.tip}</div>
-                      <div className="text-xs text-muted-foreground">{tip.category}</div>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" className="w-full mt-2">
-                  More Safety Tips
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Enhanced Safety Tips */}
+          <EnhancedSafetyTips maxItems={3} />
 
           {/* Emergency Contacts */}
           <Card>
@@ -195,33 +184,7 @@ export default async function FisherfolkDashboard() {
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>All Active Alerts</CardTitle>
-              <CardDescription>Real-time coastal threat notifications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {liveAlerts.map((alert) => (
-                  <div key={alert.id} className="p-3 border rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <div className="font-medium">{alert.type}</div>
-                        <div className="text-sm text-muted-foreground">{alert.location} • {alert.time}</div>
-                      </div>
-                      <Badge variant={alert.severity === "Critical" ? "destructive" : alert.severity === "High" ? "default" : "secondary"}>
-                        {alert.severity}
-                      </Badge>
-                    </div>
-                    <div className="bg-blue-50 p-2 rounded border-l-4 border-blue-400">
-                      <div className="text-sm font-medium text-blue-800">Action Required:</div>
-                      <div className="text-sm text-blue-700">{alert.action}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <RealTimeAlerts showViewAll={true} maxItems={undefined} title="All Active Alerts" />
         </TabsContent>
 
         <TabsContent value="conditions" className="space-y-4">
@@ -250,35 +213,73 @@ export default async function FisherfolkDashboard() {
             </CardContent>
           </Card>
 
-          {/* Coastal Conditions */}
+          {/* Enhanced Coastal Conditions */}
           <Card>
             <CardHeader>
               <CardTitle>Coastal Conditions</CardTitle>
               <CardDescription>Current sea conditions by location</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {coastalConditions.map((condition, index) => (
-                  <div key={index} className="p-3 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">{condition.location}</h3>
-                      <Badge variant={condition.fishing === "Safe" ? "default" : "secondary"}>
-                        {condition.fishing}
+              <div className="space-y-4">
+                {mockCoastalConditions.map((condition) => (
+                  <div key={condition.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-blue-500" />
+                        <h3 className="font-medium">{condition.location}</h3>
+                      </div>
+                      <Badge 
+                        variant={condition.fishingSafety === "safe" ? "default" : condition.fishingSafety === "caution" ? "secondary" : "destructive"}
+                        className={getFishingSafetyColor(condition.fishingSafety)}
+                      >
+                        {condition.fishingSafety.toUpperCase()}
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Waves className="h-4 w-4 text-blue-500" />
+                        <div>
+                          <div className="text-muted-foreground">Sea Level</div>
+                          <div className="font-medium">{condition.seaLevel}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Wind className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <div className="text-muted-foreground">Wind</div>
+                          <div className="font-medium">{condition.windSpeed}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-green-500" />
+                        <div>
+                          <div className="text-muted-foreground">Visibility</div>
+                          <div className="font-medium">{condition.visibility}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Thermometer className="h-4 w-4 text-orange-500" />
+                        <div>
+                          <div className="text-muted-foreground">Temperature</div>
+                          <div className="font-medium">{condition.temperature}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-3 border-t grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Sea Level:</span> {condition.seaLevel}
+                        <span className="text-muted-foreground">Wave Height:</span>
+                        <span className="ml-1 font-medium">{condition.waveHeight}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Wind:</span> {condition.windSpeed}
+                        <span className="text-muted-foreground">Current:</span>
+                        <span className="ml-1 font-medium capitalize">{condition.currentStrength}</span>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Visibility:</span> {condition.visibility}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Fishing:</span> {condition.fishing}
-                      </div>
+                    </div>
+                    
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Last updated: {new Date(condition.lastUpdated).toLocaleString()}
                     </div>
                   </div>
                 ))}
@@ -286,18 +287,76 @@ export default async function FisherfolkDashboard() {
             </CardContent>
           </Card>
 
-          {/* Map Preview */}
+          {/* Interactive Map with Real-Time Data */}
+          <InteractiveMap height="h-96" />
+          
+          {/* Real-Time Location Status */}
           <Card>
             <CardHeader>
-              <CardTitle>Coastal Map</CardTitle>
-              <CardDescription>Current fishing zones and conditions</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Navigation className="h-5 w-5 text-blue-500" />
+                Location & Data Status
+                {isConnected && (
+                  <div className="flex items-center gap-1">
+                    <Zap className="h-3 w-3 text-green-500" />
+                    <span className="text-xs text-green-600 font-normal">LIVE</span>
+                  </div>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-48 bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <MapPin className="h-8 w-8 mx-auto mb-2" />
-                  <p>Interactive map would be displayed here</p>
-                  <p className="text-sm">Showing nearby coastal conditions</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Your Location</h4>
+                  {userLocation ? (
+                    <div className="text-sm space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-green-700">GPS Active</span>
+                      </div>
+                      <div className="text-muted-foreground">
+                        Lat: {userLocation.latitude.toFixed(6)}
+                      </div>
+                      <div className="text-muted-foreground">
+                        Lng: {userLocation.longitude.toFixed(6)}
+                      </div>
+                      <div className="text-muted-foreground">
+                        Accuracy: ±{userLocation.accuracy}m
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <span className="text-gray-600">Location not available</span>
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        Enable location access for personalized alerts
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-medium">Real-Time Data</h4>
+                  <div className="text-sm space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      <span className={isConnected ? 'text-green-700' : 'text-red-700'}>
+                        {isConnected ? 'Connected' : 'Disconnected'}
+                      </span>
+                    </div>
+                    {lastUpdate && (
+                      <div className="text-muted-foreground">
+                        Last update: {new Date(lastUpdate).toLocaleTimeString()}
+                      </div>
+                    )}
+                    {realTimeData && (
+                      <div className="text-muted-foreground">
+                        {realTimeData.alerts?.length || 0} alerts • {realTimeData.conditions?.length || 0} monitoring stations
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
