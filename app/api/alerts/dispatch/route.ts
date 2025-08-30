@@ -33,8 +33,9 @@ export async function POST(req: NextRequest) {
     .eq("id", alertId)
     .single()
 
-  // @ts-expect-error supabase error may have code
-  if (alertErr?.code === "42P01") {
+  // @ts-ignore - supabase error may have a code property
+if (alertErr?.code === "42P01") {
+ {
     return NextResponse.json({ error: "Database not initialized. Run SQL scripts." }, { status: 503 })
   }
   if (alertErr || !alert) {
