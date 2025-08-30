@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-export const runtime = "nodejs";
 
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -43,7 +43,11 @@ export async function POST(req: NextRequest) {
   }
 
   // Check if user is admin (to allow dispatching others' alerts)
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle()
 
   const isAdmin = profile?.role === "admin"
   if (!isAdmin && alert.created_by !== user.id) {
@@ -70,11 +74,7 @@ export async function POST(req: NextRequest) {
   }))
 
   const { error: insertErr } = await supabase.from("dispatch_logs").insert(rows)
-  // @ts-ignore - supabase error may have a code property
-if (alertErr?.code === "42P01") {
 
-    return NextResponse.json({ error: "Database not initialized. Run SQL scripts." }, { status: 503 })
-  }
   if (insertErr) {
     return NextResponse.json({ error: "Failed to record dispatch" }, { status: 500 })
   }
