@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+export const runtime = "nodejs";
+
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -33,9 +35,8 @@ export async function POST(req: NextRequest) {
     .eq("id", alertId)
     .single()
 
-  // @ts-ignore - supabase error may have a code property
-if (alertErr?.code === "42P01") {
- {
+if ((alertErr as { code?: string })?.code === "42P01") {
+ 
     return NextResponse.json({ error: "Database not initialized. Run SQL scripts." }, { status: 503 })
   }
   if (alertErr || !alert) {
@@ -70,8 +71,9 @@ if (alertErr?.code === "42P01") {
   }))
 
   const { error: insertErr } = await supabase.from("dispatch_logs").insert(rows)
-  // @ts-expect-error code may exist on error
-  if (insertErr?.code === "42P01") {
+  // @ts-ignore - supabase error may have a code property
+if (alertErr?.code === "42P01") {
+
     return NextResponse.json({ error: "Database not initialized. Run SQL scripts." }, { status: 503 })
   }
   if (insertErr) {
