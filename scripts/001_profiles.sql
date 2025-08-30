@@ -2,7 +2,8 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   first_name text,
   last_name text,
-  role text not null default 'resident' check (role in ('admin','agency','community','resident','researcher')),
+  organization text,
+  role text not null default 'fisherfolk' check (role in ('disaster_management','coastal_government','environmental_ngo','fisherfolk','civil_defence')),
   created_at timestamp with time zone default now()
 );
 

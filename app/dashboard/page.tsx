@@ -11,7 +11,7 @@ export default async function DashboardIndex() {
     redirect("/auth/login")
   }
 
-  // Try to read user role from profiles table; default to resident if missing.
+  // Try to read user role from profiles table
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
     .select("role")
@@ -19,19 +19,19 @@ export default async function DashboardIndex() {
     .maybeSingle()
 
   // @ts-expect-error supabase error may include code
-  const role = (profile?.role || (profileErr?.code === "42P01" ? "resident" : "resident")) as
-    | "admin"
-    | "agency"
-    | "community"
-    | "resident"
-    | "researcher"
+  const role = (profile?.role || (profileErr?.code === "42P01" ? "fisherfolk" : "fisherfolk")) as
+    | "disaster_management"
+    | "coastal_government"
+    | "environmental_ngo"
+    | "fisherfolk"
+    | "civil_defence"
 
   const path = {
-    admin: "/dashboard/admin",
-    agency: "/dashboard/agency",
-    community: "/dashboard/community",
-    resident: "/dashboard/resident",
-    researcher: "/dashboard/researcher",
+    disaster_management: "/dashboard/disaster-management",
+    coastal_government: "/dashboard/coastal-government",
+    environmental_ngo: "/dashboard/environmental-ngo",
+    fisherfolk: "/dashboard/fisherfolk",
+    civil_defence: "/dashboard/civil-defence",
   }[role]
 
   redirect(path)
