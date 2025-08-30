@@ -1,31 +1,84 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Leaf, Satellite, AlertTriangle, TreePine, TrendingDown, Globe } from "lucide-react"
 import Image from "next/image"
+import { UrgentFloodAlert } from "@/components/alerts/urgent-flood-alert"
+import { EnhancedSatelliteViewer } from "@/components/satellite/enhanced-satellite-viewer"
+// import { PollutionAlertsSection } from "@/components/alerts/pollution-alerts-section"
+import { BlueCarbonDetails } from "@/components/alerts/blue-carbon-details"
+import { PollutionInvestigation } from "@/components/alerts/pollution-investigation"
 
-export default async function EnvironmentalNGODashboard() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function EnvironmentalNGODashboard() {
+  const [selectedEcosystem, setSelectedEcosystem] = useState<string | null>(null)
+  const [selectedPollutionAlert, setSelectedPollutionAlert] = useState<any>(null)
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
-  if (!user) {
-    redirect("/auth/login")
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push("/auth/login")
+        return
+      }
+
+      // Check if user has the correct role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+
+      if (profile?.role !== "environmental_ngo") {
+        router.push("/dashboard")
+        return
+      }
+
+      setUser(user)
+      setProfile(profile)
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    )
   }
 
-  // Check if user has the correct role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
+  if (selectedEcosystem) {
+    return (
+      <BlueCarbonDetails 
+        ecosystem={selectedEcosystem} 
+        onBack={() => setSelectedEcosystem(null)} 
+      />
+    )
+  }
 
-  if (profile?.role !== "environmental_ngo") {
-    redirect("/dashboard")
+  if (selectedPollutionAlert) {
+    return (
+      <PollutionInvestigation 
+        alert={selectedPollutionAlert} 
+        onBack={() => setSelectedPollutionAlert(null)} 
+      />
+    )
   }
 
   // Mock data for hackathon MVP
@@ -52,17 +105,11 @@ export default async function EnvironmentalNGODashboard() {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Environmental NGO Dashboard</h1>
-          <p className="text-muted-foreground">
-            Monitor coastal ecosystems and environmental threats
-          </p>
-        </div>
-        <Button>
-          <Leaf className="mr-2 h-4 w-4" />
-          Conservation Hub
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Environmental NGO Dashboard</h1>
+        <p className="text-muted-foreground">
+          Monitor coastal ecosystems and environmental threats
+        </p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
@@ -143,95 +190,51 @@ export default async function EnvironmentalNGODashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Conservation and monitoring tools</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full" variant="default">
-                  <Satellite className="mr-2 h-4 w-4" />
-                  Satellite Analysis
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Leaf className="mr-2 h-4 w-4" />
-                  Ecosystem Report
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  Alert Management
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <TreePine className="mr-2 h-4 w-4" />
-                  Conservation Plan
-                </Button>
-              </CardContent>
-            </Card>
+            <UrgentFloodAlert />
           </div>
         </TabsContent>
 
         <TabsContent value="satellite" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Satellite Imagery Analysis</CardTitle>
-              <CardDescription>Recent coastal satellite observations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-3">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">Mumbai Coast - Recent</h3>
-                    <div className="h-48 bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center text-muted-foreground">
-                        <Satellite className="h-8 w-8 mx-auto mb-2" />
-                        <p>Satellite imagery would be displayed here</p>
-                        <p className="text-sm">Resolution: 10m • Date: Today</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">Chennai Coast - Historical</h3>
-                    <div className="h-48 bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center text-muted-foreground">
-                        <Satellite className="h-8 w-8 mx-auto mb-2" />
-                        <p>Historical comparison would be shown here</p>
-                        <p className="text-sm">Resolution: 10m • Date: 1 month ago</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4">
-                <Button className="w-full" variant="outline">
-                  <Satellite className="mr-2 h-4 w-4" />
-                  Request New Satellite Data
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <EnhancedSatelliteViewer />
         </TabsContent>
 
         <TabsContent value="pollution" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Pollution & Environmental Alerts</CardTitle>
-              <CardDescription>Active environmental threats and alerts</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Pollution Alerts
+              </CardTitle>
+              <CardDescription>Active pollution incidents requiring attention</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {pollutionAlerts.map((alert) => (
-                  <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{alert.type}</div>
-                      <div className="text-sm text-muted-foreground">{alert.location} • Area: {alert.area}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={alert.severity === "Critical" ? "destructive" : alert.severity === "High" ? "default" : alert.severity === "Medium" ? "default" : "secondary"}>
+                  <div key={alert.id} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold">{alert.type}</h3>
+                      <Badge variant={alert.severity === "Critical" ? "destructive" : alert.severity === "High" ? "destructive" : alert.severity === "Medium" ? "secondary" : "default"}>
                         {alert.severity}
                       </Badge>
-                      <Button size="sm" variant="outline">Investigate</Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <div className="font-medium">Location</div>
+                        <div className="text-muted-foreground">{alert.location}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Affected Area</div>
+                        <div className="text-muted-foreground">{alert.area}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setSelectedPollutionAlert(alert)}
+                      >
+                        Investigate
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -267,7 +270,13 @@ export default async function EnvironmentalNGODashboard() {
                       </div>
                     </div>
                     <div className="mt-3">
-                      <Button size="sm" variant="outline">View Details</Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setSelectedEcosystem(ecosystem.ecosystem)}
+                      >
+                        View Details
+                      </Button>
                     </div>
                   </div>
                 ))}
