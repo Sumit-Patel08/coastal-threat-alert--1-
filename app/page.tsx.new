@@ -7,15 +7,9 @@ import { Suspense } from 'react'
 const Navbar = dynamic(() => import('@/components/site/navbar').then(mod => mod.Navbar), { ssr: true })
 const Hero = dynamic(() => import('@/components/site/hero').then(mod => mod.Hero), { ssr: true })
 const Features = dynamic(() => import('@/components/site/features').then(mod => mod.Features), { ssr: true })
-const InteractiveFeatures = dynamic(() => import('@/components/sections/interactive-features').then(mod => mod.InteractiveFeatures), { ssr: true })
-const VisualStorytelling = dynamic(() => import('@/components/sections/visual-storytelling').then(mod => mod.VisualStorytelling), { ssr: true })
 const MapPreview = dynamic(() => import('@/components/site/map-preview').then(mod => mod.MapPreview), { ssr: true })
 const MetricsChart = dynamic(() => import('@/components/site/charts/metrics-chart').then(mod => mod.MetricsChart), { ssr: true })
 const BlueCarbon = dynamic(() => import('@/components/site/blue-carbon').then(mod => mod.BlueCarbon), { ssr: true })
-const Testimonials = dynamic(() => import('@/components/trust/testimonials').then(mod => mod.Testimonials), { ssr: true })
-const Partners = dynamic(() => import('@/components/trust/partners').then(mod => mod.Partners), { ssr: true })
-const LiveStats = dynamic(() => import('@/components/trust/live-stats').then(mod => mod.LiveStats), { ssr: true })
-const CTA = dynamic(() => import('@/components/site/cta').then(mod => mod.CTA), { ssr: true })
 const Footer = dynamic(() => import('@/components/site/footer').then(mod => mod.Footer), { ssr: true })
 
 // Loading components
@@ -41,14 +35,6 @@ export default function HomePage() {
 
         <Suspense fallback={<LoadingSpinner />}>
           <Features />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <InteractiveFeatures />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <VisualStorytelling />
         </Suspense>
 
         <section id="map" className="bg-gray-50 py-16 dark:bg-gray-900/50">
@@ -89,22 +75,6 @@ export default function HomePage() {
 
         <Suspense fallback={<LoadingSpinner />}>
           <BlueCarbon />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <LiveStats />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <Testimonials />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <Partners />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <CTA />
         </Suspense>
       </main>
 
