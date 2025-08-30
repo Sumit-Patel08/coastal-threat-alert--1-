@@ -62,21 +62,72 @@ export default function Page() {
       if (signUpError) throw signUpError
 
       if (user) {
-        // Create profile with role
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            first_name: firstName,
-            last_name: lastName,
-            organization: organization,
-            role: role
-          })
+        // Create profile with role using database function
+        const profileData = {
+          user_id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          organization: organization,
+          user_role: role
+        }
+        
+        // Try using the database function first, fallback to direct insert
+        let profileResult, profileError;
+        
+        try {
+          // Try the function approach
+          const { data: funcResult, error: funcError } = await supabase
+            .rpc('insert_profile', profileData);
+          
+          if (funcError) {
+            console.log("Function failed, trying direct insert:", funcError.message);
+            // Fallback to direct insert
+            const { data: directResult, error: directError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                first_name: firstName,
+                last_name: lastName,
+                organization: organization,
+                role: role
+              })
+              .select();
+            
+            profileResult = directResult;
+            profileError = directError;
+          } else {
+            profileResult = funcResult;
+            profileError = null;
+          }
+        } catch (fallbackError) {
+          console.log("Function not available, using direct insert");
+          // Direct insert as final fallback
+          const { data: directResult, error: directError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              first_name: firstName,
+              last_name: lastName,
+              organization: organization,
+              role: role
+            })
+            .select();
+          
+          profileResult = directResult;
+          profileError = directError;
+        }
 
-        if (profileError) throw profileError
+        // Check if profile creation was successful
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          throw new Error(`Failed to create profile: ${profileError.message}`);
+        }
+
+                console.log("Profile created successfully, redirecting...");
+        router.push("/auth/sign-up-success");
+      } else {
+        throw new Error("User creation failed - no user returned");
       }
-
-      router.push("/auth/sign-up-success")
     } catch (error: unknown) {
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
