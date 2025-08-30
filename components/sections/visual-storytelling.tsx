@@ -2,11 +2,10 @@
 
 import { motion } from "framer-motion"
 import { BeforeAfterSlider } from "@/components/visual/before-after-slider"
-import { ThreeDWaveAnimation } from "@/components/visual/3d-wave-animation"
 
 export function VisualStorytelling() {
   return (
-    <section className="py-24 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/10 dark:to-cyan-900/10">
+    <section id="visual-stories" className="py-24 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/10 dark:to-cyan-900/10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -44,12 +43,6 @@ export function VisualStorytelling() {
             viewport={{ once: true }}
             className="space-y-8"
           >
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Real-Time Wave Simulation
-              </h3>
-              <ThreeDWaveAnimation />
-            </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
               <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">

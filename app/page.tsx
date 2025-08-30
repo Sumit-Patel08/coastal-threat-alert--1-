@@ -9,12 +9,8 @@ const Hero = dynamic(() => import('@/components/site/hero').then(mod => mod.Hero
 const Features = dynamic(() => import('@/components/site/features').then(mod => mod.Features), { ssr: true })
 const InteractiveFeatures = dynamic(() => import('@/components/sections/interactive-features').then(mod => mod.InteractiveFeatures), { ssr: true })
 const VisualStorytelling = dynamic(() => import('@/components/sections/visual-storytelling').then(mod => mod.VisualStorytelling), { ssr: true })
-const MapPreview = dynamic(() => import('@/components/site/map-preview').then(mod => mod.MapPreview), { ssr: true })
-const MetricsChart = dynamic(() => import('@/components/site/charts/metrics-chart').then(mod => mod.MetricsChart), { ssr: true })
-const BlueCarbon = dynamic(() => import('@/components/site/blue-carbon').then(mod => mod.BlueCarbon), { ssr: true })
-const Testimonials = dynamic(() => import('@/components/trust/testimonials').then(mod => mod.Testimonials), { ssr: true })
-const Partners = dynamic(() => import('@/components/trust/partners').then(mod => mod.Partners), { ssr: true })
-const LiveStats = dynamic(() => import('@/components/trust/live-stats').then(mod => mod.LiveStats), { ssr: true })
+const BlueCarbonExpanded = dynamic(() => import('@/components/site/blue-carbon-expanded').then(mod => mod.BlueCarbonExpanded), { ssr: true })
+const CoastalAwarenessInterconnectivity = dynamic(() => import('@/components/site/coastal-awareness-interconnectivity').then(mod => mod.CoastalAwarenessInterconnectivity), { ssr: true })
 const CTA = dynamic(() => import('@/components/site/cta').then(mod => mod.CTA), { ssr: true })
 const Footer = dynamic(() => import('@/components/site/footer').then(mod => mod.Footer), { ssr: true })
 
@@ -51,56 +47,13 @@ export default function HomePage() {
           <VisualStorytelling />
         </Suspense>
 
-        <section id="map" className="bg-gray-50 py-16 dark:bg-gray-900/50">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                Live Coastal Risk Map
-              </h2>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-                Track real-time coastal threats and monitor at-risk areas with our interactive map.
-              </p>
-            </div>
-            <div className="mt-12">
-              <Suspense fallback={<div className="h-[600px] w-full animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800" />}>
-                <MapPreview />
-              </Suspense>
-            </div>
-          </div>
-        </section>
-
-        <section id="insights" className="py-16">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                Insights & Analytics
-              </h2>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-                Data-driven insights to help you understand and mitigate coastal risks.
-              </p>
-            </div>
-            <div className="mt-12">
-              <Suspense fallback={<div className="h-[400px] w-full animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800" />}>
-                <MetricsChart />
-              </Suspense>
-            </div>
-          </div>
-        </section>
 
         <Suspense fallback={<LoadingSpinner />}>
-          <BlueCarbon />
+          <BlueCarbonExpanded />
         </Suspense>
 
         <Suspense fallback={<LoadingSpinner />}>
-          <LiveStats />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <Testimonials />
-        </Suspense>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <Partners />
+          <CoastalAwarenessInterconnectivity />
         </Suspense>
 
         <Suspense fallback={<LoadingSpinner />}>

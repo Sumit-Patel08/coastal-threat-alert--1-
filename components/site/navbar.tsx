@@ -9,10 +9,23 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/auth/auth-provider"
 import { UserProfileDropdown } from "@/components/auth/user-profile-dropdown"
 
+// Smooth scroll function
+const smoothScrollTo = (elementId: string) => {
+  const element = document.getElementById(elementId.replace('#', ''))
+  if (element) {
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }
+}
+
 const mainNav = [
   { name: "Features", href: "#features" },
-  { name: "Risk Map", href: "#map" },
-  { name: "Insights", href: "#insights" },
+  { name: "Interactive", href: "#interactive" },
+  { name: "Visual Stories", href: "#visual-stories" },
+  { name: "Blue Carbon", href: "#blue-carbon" },
+  { name: "Interconnectivity", href: "#interconnectivity" },
   { name: "About", href: "#about" },
 ]
 
@@ -101,13 +114,13 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex md:items-center md:space-x-8">
             {mainNav.map((item) => (
-              <Link
+              <button
                 key={item.name}
-                href={item.href}
+                onClick={() => smoothScrollTo(item.href)}
                 className="text-sm font-medium text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
               >
                 {item.name}
-              </Link>
+              </button>
             ))}
             
             {/* Dashboard Dropdown */}
@@ -173,13 +186,16 @@ export function Navbar() {
         <div className="md:hidden">
           <div className="space-y-1 border-t border-gray-200 px-2 pb-3 pt-2 dark:border-gray-700">
             {mainNav.map((item) => (
-              <Link
+              <button
                 key={item.name}
-                href={item.href}
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                onClick={() => {
+                  smoothScrollTo(item.href)
+                  setMobileMenuOpen(false)
+                }}
+                className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 {item.name}
-              </Link>
+              </button>
             ))}
             
             <div className="px-3 py-2">

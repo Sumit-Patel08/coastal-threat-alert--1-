@@ -6,20 +6,12 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Coastal Threat Alert. All rights reserved.
           </p>
-          <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground">
-              Features
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>Contact Us:</span>
+            <a href="mailto:contact.coastalalert@gmail.com" className="hover:text-foreground">
+              contact.coastalalert@gmail.com
             </a>
-            <a href="#map" className="hover:text-foreground">
-              Map
-            </a>
-            <a href="#insights" className="hover:text-foreground">
-              Insights
-            </a>
-            <a href="#learn" className="hover:text-foreground">
-              Learn
-            </a>
-          </nav>
+          </div>
         </div>
       </div>
     </footer>
