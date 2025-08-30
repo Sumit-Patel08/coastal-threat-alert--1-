@@ -333,7 +333,7 @@ export function BlueCarbonDetails({ ecosystem, onBack }: BlueCarbonDetailsProps)
                 </CardHeader>
                 <CardContent>
                   <img
-                    src={`https://maps.googleapis.com/maps/api/staticmap?center=${location.coordinates.lat},${location.coordinates.lng}&zoom=15&size=400x300&scale=2&maptype=satellite`}
+                    src={location.name === "Rann of Kutch Gujarat" ? "/rann-of-kutch-salt-marsh.png" : location.name === "Chilika Lake Odisha" ? "/chilika-lake-odisha-satellite.png" : location.name === "Pulicat Lake Tamil Nadu" ? "/pulicat-lake-tamil-nadu-satellite.png" : location.name === "Kolleru Lake Andhra Pradesh" ? "/kolleru-lake-andhra-pradesh-satellite.png" : `https://maps.googleapis.com/maps/api/staticmap?center=${location.coordinates.lat},${location.coordinates.lng}&zoom=15&size=400x300&scale=2&maptype=satellite`}
                     alt={`${location.name} satellite view`}
                     className="w-full h-32 object-cover rounded mb-3"
                     onError={(e) => {
