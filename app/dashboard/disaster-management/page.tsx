@@ -111,7 +111,7 @@ export default async function DisasterManagementDashboard() {
             </Card>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4">
             <Card>
               <CardHeader>
                 <CardTitle>Recent Alerts</CardTitle>
@@ -137,26 +137,6 @@ export default async function DisasterManagementDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Emergency response tools</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full" variant="destructive">
-                  Emergency Broadcast
-                </Button>
-                <Button className="w-full" variant="outline">
-                  Evacuation Routes
-                </Button>
-                <Button className="w-full" variant="outline">
-                  Resource Allocation
-                </Button>
-                <Button className="w-full" variant="outline">
-                  Weather Updates
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
 
