@@ -21,7 +21,7 @@ export function CitySelector({ selectedCity, setSelectedCity, coastalCities, aiA
           <MapPin className="h-5 w-5" />
           AI Monitoring Control
         </CardTitle>
-        <CardDescription>Select coastal region for automated threat analysis</CardDescription>
+        <CardDescription>Select a coastal city for AI-powered threat analysis and monitoring</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-4">
