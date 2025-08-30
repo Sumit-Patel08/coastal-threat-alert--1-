@@ -20,9 +20,6 @@ export function Hero() {
               <Link href="#map">View map</Link>
             </Button>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Demo mode: data is mocked for preview. Connect your data sources later.
-          </p>
         </div>
         <Card className="p-4">
           <div className="aspect-[16/10] w-full overflow-hidden rounded-md border">

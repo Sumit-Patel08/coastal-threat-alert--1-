@@ -106,7 +106,7 @@ export default function EnvironmentalNGODashboard() {
   return (
     <div className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Environmental NGO Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Disaster Management Dashboard</h1>
         <p className="text-muted-foreground">
           Monitor coastal ecosystems and environmental threats
         </p>
