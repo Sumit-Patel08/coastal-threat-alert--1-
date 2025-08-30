@@ -48,8 +48,12 @@ export async function updateSession(request: NextRequest) {
   // Debug breadcrumbs (remove after verifying)
   console.log("[v0] middleware:path", pathname, "user?", !!user, "protected?", isProtected, "auth?", isAuth)
 
-  // Allow access to auth pages even when logged in - users must always provide credentials
-  // Removed auto-redirect to dashboard from auth pages
+  // Redirect authenticated users away from auth pages to dashboard
+  if (isAuth && user && !pathname.includes('/auth/sign-up-success')) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard"
+    return NextResponse.redirect(url)
+  }
 
   // gate protected routes only
   if (isProtected && !user) {
