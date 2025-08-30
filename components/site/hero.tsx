@@ -3,19 +3,10 @@
 import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { motion, useAnimation, useInView } from "framer-motion"
 import { Play, ShieldAlert, AlertTriangle, MapPin } from "lucide-react"
 
 export function Hero() {
-  const controls = useAnimation()
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
-
-  useEffect(() => {
-    if (isInView) {
-      controls.start("visible")
-    }
-  }, [controls, isInView])
 
   // Animated gradient background
   useEffect(() => {
@@ -60,11 +51,7 @@ export function Hero() {
       
       <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
         <div className="grid items-center gap-8 md:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="animate-in slide-in-from-left-4 fade-in duration-500">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
               Coastal Threat Alert System
             </h1>
@@ -80,14 +67,9 @@ export function Hero() {
                 <Link href="#map">View Live Map</Link>
               </Button>
             </div>
-          </motion.div>
+          </div>
           
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, x: 20 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative mt-12 sm:mt-0"
-          >
+          <div className="relative mt-12 sm:mt-0 animate-in slide-in-from-right-4 fade-in duration-500 delay-200">
             <div className="relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm p-1 shadow-2xl ring-1 ring-white/10">
               <img
                 src="/coastal-map-preview-tile-ocean-shoreline.png"
@@ -101,20 +83,15 @@ export function Hero() {
                 </span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
       
       {/* Animated gradient blobs */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden animate-in fade-in duration-1000">
         <div className="absolute -left-16 top-1/2 hidden h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/20 blur-3xl lg:block" />
         <div className="absolute -right-16 bottom-1/4 hidden h-32 w-32 rounded-full bg-cyan-500/20 blur-3xl lg:block" />
-      </motion.div>
+      </div>
     </section>
   )
 }

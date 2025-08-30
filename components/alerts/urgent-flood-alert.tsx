@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Waves, Phone, MapPin, Clock, Users, ExternalLink } from "lucide-react"
+import { AlertTriangle, Waves, Phone, MapPin, Clock, Users, ExternalLink, MessageSquare, Send } from "lucide-react"
+import { SMSService } from "@/lib/sms-service"
 
 interface FloodAlert {
   id: string
@@ -23,6 +24,9 @@ export function UrgentFloodAlert() {
   const [floodAlerts, setFloodAlerts] = useState<FloodAlert[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [sendingAlert, setSendingAlert] = useState<string | null>(null)
+  const [smsResults, setSmsResults] = useState<{[key: string]: any}>({})
+  const smsService = SMSService.getInstance()
 
   // Simulate real-time flood data fetching
   useEffect(() => {
@@ -135,6 +139,40 @@ export function UrgentFloodAlert() {
     return `https://www.google.com/maps/search/${encodeURIComponent(location)}/@${coordinates.lat},${coordinates.lng},15z`
   }
 
+  const handleSendSMS = async (alert: FloodAlert) => {
+    setSendingAlert(alert.id)
+    
+    try {
+      const result = await smsService.sendFloodAlert(
+        alert.location,
+        alert.severity,
+        alert.waterLevel,
+        alert.evacuationStatus
+      )
+      
+      setSmsResults(prev => ({
+        ...prev,
+        [alert.id]: result
+      }))
+      
+      // Show success/error feedback
+      if (result.success) {
+        console.log(`SMS alerts sent successfully to ${result.sent} contacts`)
+      } else {
+        console.error(`Failed to send ${result.failed} SMS alerts:`, result.errors)
+      }
+      
+    } catch (error) {
+      console.error("Error sending SMS alerts:", error)
+      setSmsResults(prev => ({
+        ...prev,
+        [alert.id]: { success: false, sent: 0, failed: 1, errors: [String(error)] }
+      }))
+    } finally {
+      setSendingAlert(null)
+    }
+  }
+
   if (loading) {
     return (
       <Card>
@@ -245,12 +283,52 @@ export function UrgentFloodAlert() {
                     View Location
                     <ExternalLink className="h-3 w-3 ml-1" />
                   </Button>
+                  <Button 
+                    size="sm" 
+                    className="text-xs bg-blue-600 hover:bg-blue-700"
+                    onClick={() => handleSendSMS(alert)}
+                    disabled={sendingAlert === alert.id}
+                  >
+                    {sendingAlert === alert.id ? (
+                      <>
+                        <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3 w-3 mr-1" />
+                        Send SMS Alert
+                      </>
+                    )}
+                  </Button>
                   <Button size="sm" className="text-xs bg-red-600 hover:bg-red-700">
                     <Phone className="h-3 w-3 mr-1" />
                     Emergency Response
                   </Button>
                 </div>
               </div>
+              
+              {/* SMS Status Display */}
+              {smsResults[alert.id] && (
+                <div className={`mt-3 p-2 rounded text-xs ${
+                  smsResults[alert.id].success 
+                    ? 'bg-green-50 text-green-700 border border-green-200' 
+                    : 'bg-red-50 text-red-700 border border-red-200'
+                }`}>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    {smsResults[alert.id].success 
+                      ? `✅ SMS sent to ${smsResults[alert.id].sent} contacts`
+                      : `❌ Failed to send ${smsResults[alert.id].failed} SMS alerts`
+                    }
+                  </div>
+                  {smsResults[alert.id].errors?.length > 0 && (
+                    <div className="mt-1 text-xs opacity-75">
+                      {smsResults[alert.id].errors[0]}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))
         )}
