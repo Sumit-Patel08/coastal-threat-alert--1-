@@ -18,8 +18,8 @@ export default async function DashboardIndex() {
     .eq("id", user.id)
     .maybeSingle()
 
-  // @ts-expect-error supabase error may include code
-  const role = (profile?.role || (profileErr?.code === "42P01" ? "fisherfolk" : "fisherfolk")) as
+  // Default to fisherfolk if profile not found or error occurs
+  const role = (profile?.role || "fisherfolk") as
     | "disaster_management"
     | "coastal_government"
     | "environmental_ngo"
