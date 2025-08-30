@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertTriangle, TrendingUp, Map, Bell, Activity } from "lucide-react"
+import { AIAlertLogs } from "@/components/alerts/ai-alert-logs"
+import { HistoricalTrendsCharts } from "@/components/charts/historical-trends-charts"
 
 export default async function DisasterManagementDashboard() {
   const supabase = await createClient()
@@ -185,57 +187,11 @@ export default async function DisasterManagementDashboard() {
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Alert History</CardTitle>
-              <CardDescription>Complete log of all alerts and notifications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recentAlerts.map((alert) => (
-                  <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{alert.type}</div>
-                      <div className="text-sm text-muted-foreground">{alert.location} • {alert.time}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={alert.severity === "Critical" ? "destructive" : alert.severity === "High" ? "default" : "secondary"}>
-                        {alert.severity}
-                      </Badge>
-                      <Button size="sm" variant="outline">View Details</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <AIAlertLogs />
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sea Level Trends</CardTitle>
-                <CardDescription>Monthly sea level changes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Chart visualization would go here
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Cyclone Frequency</CardTitle>
-                <CardDescription>Seasonal cyclone patterns</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Chart visualization would go here
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <HistoricalTrendsCharts />
         </TabsContent>
       </Tabs>
     </div>
