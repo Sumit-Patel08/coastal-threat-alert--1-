@@ -60,11 +60,12 @@ export function AlertComposer() {
         .single()
 
       if (insertErr || !inserted?.id) {
-        const supabaseError = insertErr as { code?: string };
+        // Properly type the Supabase error
+        const supabaseError = insertErr as { code?: string; message?: string };
         if (supabaseError?.code === "42P01") {
           throw new Error("Database not initialized. Please run scripts/001_profiles.sql - 006_detections.sql.")
         }
-        throw new Error(insertErr?.message || "Failed to create alert")
+        throw new Error(supabaseError?.message || "Failed to create alert")
       }
 
       // Hit API stub to record dispatch across channels

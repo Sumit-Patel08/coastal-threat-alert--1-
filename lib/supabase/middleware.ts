@@ -11,6 +11,8 @@ export async function updateSession(
   response: NextResponse
 ) {
   try {
+    // Skip if running in Edge Runtime
+    if (typeof window !== 'undefined') return response
 
     // Get the session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()

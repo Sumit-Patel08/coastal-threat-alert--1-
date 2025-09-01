@@ -29,16 +29,21 @@ const nextConfig = {
     // Server actions configuration
     serverActions: {
       bodySizeLimit: '2mb',
+      allowedOrigins: [
+        'localhost:3000',
+        'coastal-threat.vercel.app',
+        'coastal-threat-git-main-neel-2606.vercel.app',
+      ],
     },
     // Optimize package imports
     optimizePackageImports: ['@radix-ui/react-icons'],
-    
-    // Turbo configuration
-    turbo: {
-      resolveAlias: {
-        // Fix for Windows OneDrive path issues
-        '@': './src',
-      },
+  },
+  
+  // Turbopack configuration (moved from experimental.turbo)
+  turbopack: {
+    resolveAlias: {
+      // Fix for Windows OneDrive path issues
+      '@': './src',
     },
   },
 
