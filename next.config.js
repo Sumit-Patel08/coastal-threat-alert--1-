@@ -26,8 +26,10 @@ const nextConfig = {
 
   // Experimental features
   experimental: {
-    // Enable server actions
-    serverActions: true,
+    // Server actions configuration
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
     // Optimize package imports
     optimizePackageImports: ['@radix-ui/react-icons'],
     
