@@ -1,68 +1,40 @@
-import { createServerClient } from "@supabase/ssr"
-import { NextResponse, type NextRequest } from "next/server"
+// lib/supabase/middleware.ts
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-  
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const response = NextResponse.next();
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase environment variables are not configured. Middleware will skip authentication checks.')
-    return supabaseResponse
-  }
+  // Create Edge-compatible Supabase client
+  const supabase = createMiddlewareClient({ req: request, res: response });
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
-        },
-      },
-    },
-  )
+  // Get current session
+  const { data: { session } } = await supabase.auth.getSession();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const pathname = request.nextUrl.pathname;
 
-  const pathname = request.nextUrl.pathname
-
-  // protected prefixes
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/protected") ||
     pathname.startsWith("/api/alerts") ||
-    pathname.startsWith("/api/ml")
+    pathname.startsWith("/api/ml");
 
-  // auth area
-  const isAuth = pathname.startsWith("/auth")
+  const isAuth = pathname.startsWith("/auth");
 
-  // Debug breadcrumbs (remove after verifying)
-  console.log("[v0] middleware:path", pathname, "user?", !!user, "protected?", isProtected, "auth?", isAuth)
-
-  // Redirect authenticated users away from auth pages to dashboard
-  if (isAuth && user && !pathname.includes('/auth/sign-up-success')) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/dashboard"
-    return NextResponse.redirect(url)
+  // Redirect logged-in users away from auth pages
+  if (isAuth && session?.user && !pathname.includes("/auth/sign-up-success")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
   }
 
-  // gate protected routes only
-  if (isProtected && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
-    // optional: return to original path after login
-    url.searchParams.set("next", pathname)
-    return NextResponse.redirect(url)
+  // Protect private routes
+  if (isProtected && !session?.user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
   }
 
-  return supabaseResponse
+  return response;
 }
