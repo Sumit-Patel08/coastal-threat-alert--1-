@@ -1,7 +1,7 @@
 "use client"
 
-import { createClient } from "@/lib/supabase/client"
 import { useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -16,93 +16,51 @@ export default function TestRLSPage() {
     try {
       const supabase = createClient()
 
-      // Test 1: Read from profiles table
-      setTestResult(prev => prev + "\n\n1. Testing table access...")
+      // Test 1: Read from profiles
       const { data: readData, error: readError } = await supabase
         .from('profiles')
         .select('*')
         .limit(1)
 
-      if (readError) {
-        setTestResult(prev => prev + `\n❌ Read failed: ${readError.message}`)
-      } else {
-        setTestResult(prev => prev + `\n✅ Read successful: ${readData?.length || 0} rows`)
-      }
+      setTestResult(prev => prev + (readError ? `\n❌ Read failed: ${readError.message}` : `\n✅ Read successful: ${readData?.length || 0} rows`))
 
-      // Test 2: Check table structure
-      setTestResult(prev => prev + "\n\n2. Testing table structure...")
+      // Test 2: Check structure
       const { data: structureData, error: structureError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, organization, role, created_at')
         .limit(0)
 
-      if (structureError) {
-        setTestResult(prev => prev + `\n❌ Structure check failed: ${structureError.message}`)
-      } else {
-        setTestResult(prev => prev + "\n✅ Table structure is correct")
-      }
+      setTestResult(prev => prev + (structureError ? `\n❌ Structure check failed: ${structureError.message}` : "\n✅ Table structure is correct"))
 
-      // Test 3: Check RLS policies via RPC
-setTestResult(prev => prev + "\n\n3. Checking RLS policies...")
-let policiesData = null
-let policiesError = null
+      // Test 3: RPC for policies
+      try {
+        const { data: policiesData, error: policiesError } = await supabase.rpc('get_policies', { table_name: 'profiles' })
 
-try {
-  const result = await supabase.rpc('get_policies', { table_name: 'profiles' })
-  policiesData = result.data
-  policiesError = result.error
-} catch (err) {
-  policiesError = { message: 'RPC function not available' }
-}
-
-if (policiesError) {
-  setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
-  setTestResult(prev => prev + "\n   (This is normal - checking manually)")
-} else {
-  setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
-}
-
-
-      // Test 4: Try inserting a test record (should fail due to RLS)
-      setTestResult(prev => prev + "\n\n4. Testing insert permissions...")
-      const { data: insertData, error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: '00000000-0000-0000-0000-000000000000',
-          first_name: 'Test',
-          last_name: 'User',
-          role: 'fisherfolk'
-        })
-        .select()
-
-      if (insertError) {
-        if (insertError.message.includes('new row violates row-level security policy')) {
-          setTestResult(prev => prev + "\n✅ RLS is working - insert blocked as expected")
+        if (policiesError) {
+          setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
         } else {
-          setTestResult(prev => prev + `\n❌ Insert failed with unexpected error: ${insertError.message}`)
+          setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
         }
-      } else {
-        setTestResult(prev => prev + "\n⚠️ Insert succeeded - RLS might not be working properly")
+      } catch (err) {
+        setTestResult(prev => prev + `\n⚠️ RPC failed: ${(err as Error).message}`)
       }
 
-      setTestResult(prev => prev + "\n\n✅ RLS test completed!")
+      // Test 4: Insert test record
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({ id: '00000000-0000-0000-0000-000000000000', first_name: 'Test', last_name: 'User', role: 'fisherfolk' })
+
+      setTestResult(prev => prev + (insertError?.message.includes('row-level security policy') ? "\n✅ RLS working - insert blocked" : "\n⚠️ Insert succeeded - RLS might not be working"))
+
     } catch (error) {
-      setTestResult(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setTestResult(`❌ Error: ${(error as Error).message}`)
     } finally {
       setIsLoading(false)
     }
   }
 
   const checkPoliciesManually = () => {
-    setTestResult(prev => prev + "\n\n📋 Manual RLS Policy Check:")
-    setTestResult(prev => prev + "\nGo to your Supabase dashboard:")
-    setTestResult(prev => prev + "\n1. Authentication → Policies")
-    setTestResult(prev => prev + "\n2. Look for 'profiles' table")
-    setTestResult(prev => prev + "\n3. You should see 4 policies:")
-    setTestResult(prev => prev + "\n   - profiles_select_own")
-    setTestResult(prev => prev + "\n   - profiles_insert_own")
-    setTestResult(prev => prev + "\n   - profiles_update_own")
-    setTestResult(prev => prev + "\n   - profiles_delete_own")
+    setTestResult(prev => prev + "\n\n📋 Manual RLS Policy Check:\n1. Authentication → Policies\n2. profiles table\n3. 4 policies expected")
   }
 
   return (
@@ -110,35 +68,15 @@ if (policiesError) {
       <Card>
         <CardHeader>
           <CardTitle>RLS Policy Test</CardTitle>
-          <CardDescription>
-            Test if your Row Level Security policies are working correctly
-          </CardDescription>
+          <CardDescription>Test Row Level Security policies</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
-            <Button onClick={testRLS} disabled={isLoading}>
-              {isLoading ? "Testing..." : "Test RLS Policies"}
-            </Button>
-            <Button onClick={checkPoliciesManually} variant="outline">
-              Check Policies Manually
-            </Button>
+            <Button onClick={testRLS} disabled={isLoading}>{isLoading ? "Testing..." : "Test RLS Policies"}</Button>
+            <Button onClick={checkPoliciesManually} variant="outline">Check Policies Manually</Button>
           </div>
 
-          {testResult && (
-            <div className="p-4 bg-muted rounded-lg">
-              <pre className="whitespace-pre-wrap text-sm">{testResult}</pre>
-            </div>
-          )}
-
-          <div className="text-sm text-muted-foreground">
-            <h3 className="font-semibold mb-2">What This Test Does:</h3>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Tests if the profiles table is accessible</li>
-              <li>Verifies the table structure is correct</li>
-              <li>Checks if RLS policies are working</li>
-              <li>Tests insert permissions (should be blocked without auth)</li>
-            </ul>
-          </div>
+          {testResult && <div className="p-4 bg-muted rounded-lg"><pre className="whitespace-pre-wrap text-sm">{testResult}</pre></div>}
         </CardContent>
       </Card>
     </div>
