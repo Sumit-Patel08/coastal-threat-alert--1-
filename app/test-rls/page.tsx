@@ -33,16 +33,12 @@ export default function TestRLSPage() {
       setTestResult(prev => prev + (structureError ? `\n❌ Structure check failed: ${structureError.message}` : "\n✅ Table structure is correct"))
 
       // Test 3: RPC for policies
-      try {
-        const { data: policiesData, error: policiesError } = await supabase.rpc('get_policies', { table_name: 'profiles' })
+      const { data: policiesData, error: policiesError } = await supabase.rpc('get_policies', { table_name: 'profiles' })
 
-        if (policiesError) {
-          setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
-        } else {
-          setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
-        }
-      } catch (err) {
-        setTestResult(prev => prev + `\n⚠️ RPC failed: ${(err as Error).message}`)
+      if (policiesError) {
+        setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
+      } else {
+        setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
       }
 
       // Test 4: Insert test record
