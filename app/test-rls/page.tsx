@@ -16,13 +16,13 @@ export default function TestRLSPage() {
     try {
       const supabase = createClient()
 
-      // Test 1: Check if we can read from profiles table
+      // Test 1: Read from profiles table
       setTestResult(prev => prev + "\n\n1. Testing table access...")
       const { data: readData, error: readError } = await supabase
         .from('profiles')
         .select('*')
         .limit(1)
-      
+
       if (readError) {
         setTestResult(prev => prev + `\n❌ Read failed: ${readError.message}`)
       } else {
@@ -35,34 +35,29 @@ export default function TestRLSPage() {
         .from('profiles')
         .select('id, first_name, last_name, organization, role, created_at')
         .limit(0)
-      
+
       if (structureError) {
         setTestResult(prev => prev + `\n❌ Structure check failed: ${structureError.message}`)
       } else {
         setTestResult(prev => prev + "\n✅ Table structure is correct")
       }
 
-      // Test 3: Check RLS policies
+      // Test 3: Check RLS policies via RPC
       setTestResult(prev => prev + "\n\n3. Checking RLS policies...")
-      let policiesData = null
-      let policiesError = null
-      
       try {
-        const result = await supabase.rpc('get_policies', { table_name: 'profiles' })
-        policiesData = result.data
-        policiesError = result.error
+        const { data: policiesData, error: policiesError } = await supabase.rpc('get_policies', { table_name: 'profiles' })
+
+        if (policiesError) {
+          setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
+          setTestResult(prev => prev + "\n   (This is normal - checking manually)")
+        } else {
+          setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
+        }
       } catch (err) {
-        policiesError = { message: 'RPC function not available' }
-      }
-      
-      if (policiesError) {
-        setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
-        setTestResult(prev => prev + "\n   (This is normal - checking manually)")
-      } else {
-        setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
+        setTestResult(prev => prev + `\n⚠️ RPC failed: ${(err as Error).message}`)
       }
 
-      // Test 4: Try to insert a test record (this should fail due to RLS)
+      // Test 4: Try inserting a test record (should fail due to RLS)
       setTestResult(prev => prev + "\n\n4. Testing insert permissions...")
       const { data: insertData, error: insertError } = await supabase
         .from('profiles')
@@ -85,7 +80,6 @@ export default function TestRLSPage() {
       }
 
       setTestResult(prev => prev + "\n\n✅ RLS test completed!")
-
     } catch (error) {
       setTestResult(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
@@ -116,20 +110,14 @@ export default function TestRLSPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
-            <Button 
-              onClick={testRLS} 
-              disabled={isLoading}
-            >
+            <Button onClick={testRLS} disabled={isLoading}>
               {isLoading ? "Testing..." : "Test RLS Policies"}
             </Button>
-            <Button 
-              onClick={checkPoliciesManually} 
-              variant="outline"
-            >
+            <Button onClick={checkPoliciesManually} variant="outline">
               Check Policies Manually
             </Button>
           </div>
-          
+
           {testResult && (
             <div className="p-4 bg-muted rounded-lg">
               <pre className="whitespace-pre-wrap text-sm">{testResult}</pre>
