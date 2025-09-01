@@ -43,19 +43,25 @@ export default function TestRLSPage() {
       }
 
       // Test 3: Check RLS policies via RPC
-      setTestResult(prev => prev + "\n\n3. Checking RLS policies...")
-      try {
-        const { data: policiesData, error: policiesError } = await supabase.rpc('get_policies', { table_name: 'profiles' })
+setTestResult(prev => prev + "\n\n3. Checking RLS policies...")
+let policiesData = null
+let policiesError = null
 
-        if (policiesError) {
-          setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
-          setTestResult(prev => prev + "\n   (This is normal - checking manually)")
-        } else {
-          setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
-        }
-      } catch (err) {
-        setTestResult(prev => prev + `\n⚠️ RPC failed: ${(err as Error).message}`)
-      }
+try {
+  const result = await supabase.rpc('get_policies', { table_name: 'profiles' })
+  policiesData = result.data
+  policiesError = result.error
+} catch (err) {
+  policiesError = { message: 'RPC function not available' }
+}
+
+if (policiesError) {
+  setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
+  setTestResult(prev => prev + "\n   (This is normal - checking manually)")
+} else {
+  setTestResult(prev => prev + `\n✅ Policies check: ${policiesData?.length || 0} policies found`)
+}
+
 
       // Test 4: Try inserting a test record (should fail due to RLS)
       setTestResult(prev => prev + "\n\n4. Testing insert permissions...")
