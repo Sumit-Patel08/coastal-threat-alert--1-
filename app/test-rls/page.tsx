@@ -44,9 +44,16 @@ export default function TestRLSPage() {
 
       // Test 3: Check RLS policies
       setTestResult(prev => prev + "\n\n3. Checking RLS policies...")
-      const { data: policiesData, error: policiesError } = await supabase
-        .rpc('get_policies', { table_name: 'profiles' })
-        .catch(() => ({ data: null, error: { message: 'RPC function not available' } }))
+      let policiesData = null
+      let policiesError = null
+      
+      try {
+        const result = await supabase.rpc('get_policies', { table_name: 'profiles' })
+        policiesData = result.data
+        policiesError = result.error
+      } catch (err) {
+        policiesError = { message: 'RPC function not available' }
+      }
       
       if (policiesError) {
         setTestResult(prev => prev + `\n⚠️ Could not check policies directly: ${policiesError.message}`)
